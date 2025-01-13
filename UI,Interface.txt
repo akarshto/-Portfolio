@@ -1,0 +1,227 @@
+import React, { useState, useEffect } from 'react';
+import mqtt from 'mqtt';
+import './style.css';
+
+function BrokerInterface() {
+  const [jsonData, setJsonData] = useState({
+    rotation: { roll: 0, pitch: 0, yaw: 0 },
+    translation: { x: 0, y: 0, z: 0 },
+    scale: { x: 1, y: 1, z: 1 },
+  });
+
+  const [connectedBrokerVisible, setConnectedBrokerVisible] = useState(false);
+  const [brokerUrl, setBrokerUrl] = useState('');
+  const [topic, setTopic] = useState('');
+  const [client, setClient] = useState(null);
+  const [transformations, setTransformations] = useState({
+    roll: 0, pitch: 0, yaw: 0,
+    translateX: 0, translateY: 0, translateZ: 0,
+    scaleX: 1, scaleY: 1, scaleZ: 1,
+  });
+
+  const handleInputChange = (event) => {
+    const { id, value } = event.target;
+    setTransformations((prev) => ({ ...prev, [id]: parseFloat(value) || 0 }));
+  };
+
+  const ApplyTransformations = () => {
+    setConnectedBrokerVisible(true);
+  };
+
+  const jsonSubmit = () => {
+    const jsonInput = document.getElementById('jsonInput').value;
+    try {
+      const parsedData = JSON.parse(jsonInput);
+      setJsonData(parsedData);
+      setTransformations({
+        roll: parsedData.rotation.roll,
+        pitch: parsedData.rotation.pitch,
+        yaw: parsedData.rotation.yaw,
+        translateX: parsedData.translation.x,
+        translateY: parsedData.translation.y,
+        translateZ: parsedData.translation.z,
+        scaleX: parsedData.scale.x,
+        scaleY: parsedData.scale.y,
+        scaleZ: parsedData.scale.z,
+      });
+      ApplyTransformations();
+    } catch (e) {
+      console.error("Invalid JSON input");
+    }
+  };
+
+  const resetTransformations = () => {
+    setTransformations({
+      roll: 0, pitch: 0, yaw: 0,
+      translateX: 0, translateY: 0, translateZ: 0,
+      scaleX: 1, scaleY: 1, scaleZ: 1,
+    });
+    ApplyTransformations();
+  };
+
+  const connectToBroker = () => {
+    const mqttClient = mqtt.connect(brokerUrl);
+
+    mqttClient.on('connect', () => {
+      console.log(`Connected to broker at ${brokerUrl}`);
+      mqttClient.subscribe(topic, (err) => {
+        if (err) {
+          console.error(`Subscription error: ${err}`);
+        } else {
+          console.log(`Subscribed to topic ${topic}`);
+          setClient(mqttClient);
+        }
+      });
+    });
+
+    mqttClient.on('message', (topic, message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        setJsonData(data);
+        setTransformations({
+          roll: data.rotation.roll,
+          pitch: data.rotation.pitch,
+          yaw: data.rotation.yaw,
+          translateX: data.translation.x,
+          translateY: data.translation.y,
+          translateZ: data.translation.z,
+          scaleX: data.scale.x,
+          scaleY: data.scale.y,
+          scaleZ: data.scale.z,
+        });
+        ApplyTransformations();
+      } catch (e) {
+        console.error("Invalid message format");
+      }
+    });
+
+    mqttClient.on('error', (err) => {
+      console.error(`Connection error: ${err}`);
+    });
+  };
+
+  useEffect(() => {
+    return () => {
+      if (client) {
+        client.end();
+        console.log("Disconnected from broker");
+      }
+    };
+  }, [client]);
+
+  return (
+    <div>
+      <h2>Broker Interface</h2>
+      <div id="brokerTable">
+        <div id="wrapper">
+          <h2>New Broker</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <label htmlFor="brokerUrl">Broker URL:</label>
+            <input
+              type="text"
+              id="brokerUrl"
+              placeholder="Enter broker URL"
+              style={{ width: '50%', marginBottom: '8px' }}
+              value={brokerUrl}
+              onChange={(e) => setBrokerUrl(e.target.value)}
+            />
+
+            <label htmlFor="topic">Topic:</label>
+            <input
+              type="text"
+              id="topic"
+              placeholder="Enter topic"
+              style={{ width: '50%', marginBottom: '16px' }}
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+            />
+            <button onClick={connectToBroker}>Connect to Broker</button>
+          </div>
+
+          <table>
+            <tbody>
+              <tr>
+                <th>Rotation</th>
+                <td>
+                  <label htmlFor="roll">Roll:</label>
+                  <input type="text" id="roll" placeholder="Enter roll" value={transformations.roll} onChange={handleInputChange} />
+                  <br />
+                  <label htmlFor="pitch">Pitch:</label>
+                  <input type="text" id="pitch" placeholder="Enter pitch" value={transformations.pitch} onChange={handleInputChange} />
+                  <br />
+                  <label htmlFor="yaw">Yaw:</label>
+                  <input type="text" id="yaw" placeholder="Enter yaw" value={transformations.yaw} onChange={handleInputChange} />
+                </td>
+              </tr>
+              <tr>
+                <th>Translation</th>
+                <td>
+                  <label htmlFor="translateX">Translate X:</label>
+                  <input type="text" id="translateX" placeholder="Enter translation on X axis" value={transformations.translateX} onChange={handleInputChange} />
+                  <br />
+                  <label htmlFor="translateY">Translate Y:</label>
+                  <input type="text" id="translateY" placeholder="Enter translation on Y axis" value={transformations.translateY} onChange={handleInputChange} />
+                  <br />
+                  <label htmlFor="translateZ">Translate Z:</label>
+                  <input type="text" id="translateZ" placeholder="Enter translation on Z axis" value={transformations.translateZ} onChange={handleInputChange} />
+                </td>
+              </tr>
+              <tr>
+                <th>Scale</th>
+                <td>
+                  <label htmlFor="scaleX">Scale X:</label>
+                  <input type="text" id="scaleX" placeholder="Enter scale on X axis" value={transformations.scaleX} onChange={handleInputChange} />
+                  <br />
+                  <label htmlFor="scaleY">Scale Y:</label>
+                  <input type="text" id="scaleY" placeholder="Enter scale on Y axis" value={transformations.scaleY} onChange={handleInputChange} />
+                  <br />
+                  <label htmlFor="scaleZ">Scale Z:</label>
+                  <input type="text" id="scaleZ" placeholder="Enter scale on Z axis" value={transformations.scaleZ} onChange={handleInputChange} />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <button id="applyTransformationBtn" onClick={ApplyTransformations}>Apply Transformations</button>
+          <button onClick={resetTransformations}>Reset Transformations</button>
+        </div>
+      </div>
+
+      {connectedBrokerVisible && (
+        <div id="connected-broker">
+          <h2 id="title">DISPLAY</h2>
+          <div id="cubewrapper">
+            <div
+              id="cube"
+              className="cube"
+              style={{
+                transform: `
+                  rotateX(${transformations.pitch}deg) 
+                  rotateY(${transformations.yaw}deg) 
+                  rotateZ(${transformations.roll}deg)
+                  translate3d(${transformations.translateX}px, ${transformations.translateY}px, ${transformations.translateZ}px)
+                  scale3d(${transformations.scaleX}, ${transformations.scaleY}, ${transformations.scaleZ})`,
+              }}
+            >
+              <div className="face face1"></div>
+              <div className="face face2"></div>
+              <div className="face face3"></div>
+              <div className="face face4"></div>
+              <div className="face face5"></div>
+              <div className="face face6"></div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div id="jsonWrapper">
+        <h2 style={{ textAlign: 'center' }}>JSON INPUT</h2>
+        <textarea id="jsonInput" rows="10" cols="25" placeholder="Enter JSON data here..."></textarea>
+        <br />
+        <button id="jsonSubmit" onClick={jsonSubmit}>Submit</button>
+      </div>
+    </div>
+  );
+}
+
+export default BrokerInterface;

@@ -1,0 +1,104 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+/* Styling for the table container */
+#brokerTable {
+    display: block; /* Display the table automatically */
+    margin: 20px auto;
+    width: 400px;
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+table {
+    width: 60%;
+    margin-top: 10px;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+input[type="text"] {
+    width: 80%;
+    padding: 8px;
+}
+
+/* Cube styling for Connected Broker */
+#connected-broker {
+    display: block;
+    margin-top: 50px;
+    text-align: center;
+}
+
+#cube {
+    width: 100px;
+    height: 100px;
+    background-color: lightblue;
+    margin: auto;
+    transform-style: preserve-3d;
+    transition: transform 1s ease;
+}
+
+/* Rotation cube styles */
+.face {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    background: rgba(255, 0, 0, 0.6);
+    border: 1px solid #ccc;
+}
+
+.face1 { transform: rotateY(0deg) translateZ(50px); }
+.face2 { transform: rotateY(90deg) translateZ(50px); }
+.face3 { transform: rotateY(180deg) translateZ(50px); }
+.face4 { transform: rotateY(270deg) translateZ(50px); }
+.face5 { transform: rotateX(90deg) translateZ(50px); }
+.face6 { transform: rotateX(-90deg) translateZ(50px); }
+#wrapper {
+  position: absolute;
+  left: 10px;
+  top: 7%;
+  size: 90% 10%;
+}
+
+#cubewrapper{
+  position: fixed;
+  left: 30%;
+  overflow: hidden; 
+  height: 60%;
+  width: 60%;
+}
+
+#cube
+{
+  width: 100px;
+    height: 100px;
+    background-color: lightblue;
+    transform-style: preserve-3d;
+    transform-origin: center center; /* Set the transform origin to center */
+    transition: transform 1s ease;
+    position: relative;
+    margin-top: 100px;
+}
+
+#title{
+  position: absolute;
+  left: 57%;
+  top: 10%;
+}
+
+#jsonWrapper {
+  position: absolute;
+  left: 85%;
+}
+
